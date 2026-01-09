@@ -74,6 +74,28 @@ export function ProgressDashboard() {
         );
     }
 
+    // Show sign-in prompt if not logged in
+    if (!currentUser) {
+        return (
+            <Container maxW="container.md" py={16}>
+                <Card borderRadius="3xl" boxShadow="xl" textAlign="center" bg={bg}>
+                    <CardBody py={12}>
+                        <VStack spacing={6}>
+                            <Icon as={Trophy} boxSize={16} color="yellow.400" />
+                            <Heading size="lg">Track Your Progress</Heading>
+                            <Text color="gray.500" maxW="md">
+                                Sign in to track your XP, maintain streaks, unlock achievements, and compete on the leaderboard!
+                            </Text>
+                            <Badge colorScheme="blue" px={4} py={2} borderRadius="full" fontSize="sm">
+                                Your progress will be saved automatically
+                            </Badge>
+                        </VStack>
+                    </CardBody>
+                </Card>
+            </Container>
+        );
+    }
+
     return (
         <Container maxW="container.xl" py={6}>
             {/* Top Stats Row */}

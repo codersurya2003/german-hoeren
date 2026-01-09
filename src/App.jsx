@@ -43,7 +43,7 @@ import { VoiceStudio } from "./components/VoiceStudio";
 import { ProgressDashboard } from "./components/ProgressDashboard";
 import { ExamMode } from "./components/ExamMode";
 import { AuthModal } from "./components/AuthModal";
-import { SocialHub } from "./components/SocialHub";
+import { AIDoubtAssistant } from "./components/AIDoubtAssistant";
 import { WordCard } from "./components/WordCard"; // Import WordCard
 import { getDailyWords } from './data/words'; // Import data source
 
@@ -88,7 +88,7 @@ const App = () => {
     { id: "voiceStudio", label: "Voice Studio", icon: Mic, color: "red" },
     { id: "exam", label: "Exam Mode", icon: Zap, color: "purple" },
     { id: "progress", label: "Progress", icon: Award, color: "green" },
-    { id: "social", label: "Social", icon: User, color: "pink" },
+    { id: "aiHelp", label: "AI Help", icon: Sparkles, color: "purple" },
   ];
 
   return (
@@ -264,7 +264,7 @@ const App = () => {
             {view === "voiceStudio" && <VoiceStudio />}
             {view === "exam" && <ExamMode />}
             {view === "progress" && <ProgressDashboard />}
-            {view === "social" && <SocialHub />}
+            {view === "aiHelp" && <AIDoubtAssistant />}
           </MotionBox>
         </AnimatePresence>
       </Container>

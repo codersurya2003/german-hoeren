@@ -32,6 +32,8 @@ import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useTTS } from '../hooks/useTTS';
 import { WORDS } from '../data/words';
+import { useFirebaseProgress } from '../hooks/useFirebaseProgress';
+import { useAuth } from '../contexts/AuthContext';
 
 export function VoiceStudio() {
     // Use full word list for random practice
@@ -85,6 +87,10 @@ export function VoiceStudio() {
     const { speak } = useTTS();
     const audioRef = useRef(null);
 
+    // Firebase progress tracking
+    const { currentUser } = useAuth();
+    const { addXp, updateStats, recordPractice } = useFirebaseProgress();
+
     // Keep transcriptRef synced with latest transcript value
     useEffect(() => {
         transcriptRef.current = transcript;
@@ -111,12 +117,20 @@ export function VoiceStudio() {
         stopListening();
 
         // Analyze pronunciation after a delay to allow final transcript to settle
-        setTimeout(() => {
+        setTimeout(async () => {
             // Use ref to get the latest transcript value (avoids stale closure)
             const currentTranscript = transcriptRef.current;
             const result = analyzePronunciation(practiceText, currentTranscript);
             setPronunciationResult(result);
             setShowResult(true);
+
+            // Save progress to Firebase
+            if (currentUser && result) {
+                const xpEarned = Math.round(result.overallScore / 10); // 0-10 XP based on score
+                await addXp(xpEarned);
+                await updateStats({ pronunciationSessions: 1 });
+                await recordPractice();
+            }
         }, 800);
     };
 

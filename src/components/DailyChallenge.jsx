@@ -27,6 +27,8 @@ import { challengeTemplates, xpRewards } from '../data/gameData';
 import { getDailyWords } from '../data/words';
 import { useTTS } from '../hooks/useTTS';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { useFirebaseProgress } from '../hooks/useFirebaseProgress';
+import { useAuth } from '../contexts/AuthContext';
 
 export function DailyChallenge() {
     const [currentChallenge, setCurrentChallenge] = useState(null);
@@ -40,6 +42,11 @@ export function DailyChallenge() {
     const { speak } = useTTS();
     const { isRecording, startRecording, stopRecording, audioUrl } = useVoiceRecorder();
     const dailyWords = getDailyWords();
+
+    // Firebase progress tracking
+    const { currentUser } = useAuth();
+    const { addXp, updateStats, recordPractice } = useFirebaseProgress();
+    const [progressSaved, setProgressSaved] = useState(false);
 
     const bg = useColorModeValue('white', 'gray.800');
     const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -117,7 +124,21 @@ export function DailyChallenge() {
         setScore(0);
         setTimeLeft(0);
         setCurrentSpeedQuestion(0);
+        setProgressSaved(false);
     };
+
+    // Save progress when challenge is completed
+    useEffect(() => {
+        const saveProgress = async () => {
+            if (challengeState === 'completed' && !progressSaved && currentUser && score > 0) {
+                setProgressSaved(true);
+                await addXp(score);
+                await updateStats({ wordsLearned: Math.ceil(score / 10) });
+                await recordPractice();
+            }
+        };
+        saveProgress();
+    }, [challengeState, progressSaved, currentUser, score, addXp, updateStats, recordPractice]);
 
     if (!currentChallenge) return null;
 

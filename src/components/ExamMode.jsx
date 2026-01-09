@@ -28,6 +28,9 @@ import {
 } from '@chakra-ui/react';
 import { useTTS } from '../hooks/useTTS';
 import { generateQuestions } from '../data/questions';
+import { useFirebaseProgress } from '../hooks/useFirebaseProgress';
+import { useAuth } from '../contexts/AuthContext';
+import { xpRewards } from '../data/gameData';
 
 export function ExamMode() {
     const [questions, setQuestions] = useState(() => generateQuestions(10));
@@ -36,7 +39,12 @@ export function ExamMode() {
     const [isAnswered, setIsAnswered] = useState(false);
     const [score, setScore] = useState(0);
     const [streak, setStreak] = useState(0);
+    const [examCompleted, setExamCompleted] = useState(false);
     const { speak } = useTTS();
+
+    // Firebase progress tracking
+    const { currentUser } = useAuth();
+    const { addXp, updateStats, recordPractice } = useFirebaseProgress();
 
     const question = questions[currentIndex];
     const isLast = currentIndex === questions.length - 1;
@@ -73,7 +81,28 @@ export function ExamMode() {
         setStreak(0);
         setIsAnswered(false);
         setSelectedOption(null);
+        setExamCompleted(false);
     };
+
+    // Save progress when exam is completed
+    React.useEffect(() => {
+        const saveProgress = async () => {
+            if (currentIndex >= questions.length && !examCompleted && currentUser) {
+                setExamCompleted(true);
+
+                // Calculate XP based on score
+                const baseXp = score * 10; // 10 XP per correct answer
+                const bonusXp = score === questions.length ? 50 : 0; // Perfect score bonus
+                const totalXp = baseXp + bonusXp;
+
+                // Save to Firebase
+                await addXp(totalXp);
+                await updateStats({ examsTaken: 1 });
+                await recordPractice();
+            }
+        };
+        saveProgress();
+    }, [currentIndex, questions.length, examCompleted, currentUser, score, addXp, updateStats, recordPractice]);
 
     // Calculate performance message
     const getPerformanceMessage = () => {
