@@ -1,9 +1,36 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Flame, Trophy, Star, Zap, TrendingUp, Calendar,
     Award, CheckCircle, Lock, Crown, Target, Loader2
 } from 'lucide-react';
+import {
+    Box,
+    Card,
+    CardBody,
+    Container,
+    Flex,
+    Heading,
+    Icon,
+    Progress,
+    SimpleGrid,
+    Text,
+    VStack,
+    Badge,
+    useColorModeValue,
+    CircularProgress,
+    CircularProgressLabel,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    useDisclosure,
+    HStack,
+    Tooltip,
+    GridItem
+} from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirebaseProgress } from '../hooks/useFirebaseProgress';
 import { achievements, levels, getCurrentLevel, getLevelProgress } from '../data/gameData';
@@ -15,7 +42,12 @@ export function ProgressDashboard() {
         level, syncLocalProgress
     } = useFirebaseProgress();
 
-    const [showAchievementDetails, setShowAchievementDetails] = useState(null);
+    const [selectedAchievement, setSelectedAchievement] = useState(null);
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    const bg = useColorModeValue('white', 'gray.800');
+    const cardHoverBg = useColorModeValue('gray.50', 'gray.700');
+    const borderColor = useColorModeValue('gray.200', 'gray.700');
 
     // Sync local progress on first load
     useEffect(() => {
@@ -24,6 +56,11 @@ export function ProgressDashboard() {
         }
     }, [currentUser, syncLocalProgress]);
 
+    const handleAchievementClick = (achievement) => {
+        setSelectedAchievement(achievement);
+        onOpen();
+    };
+
     // Get level progress
     const levelProgress = getLevelProgress(xp);
     const nextLevel = levels.find(l => l.level === level.level + 1);
@@ -31,282 +68,203 @@ export function ProgressDashboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <Loader2 size={32} className="animate-spin text-yellow-400" />
-            </div>
+            <Flex align="center" justify="center" h="50vh">
+                <Icon as={Loader2} boxSize={12} color="brand.500" animation="spin 1s linear infinite" />
+            </Flex>
         );
     }
 
     return (
-        <div className="max-w-5xl mx-auto">
+        <Container maxW="container.xl" py={6}>
             {/* Top Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
                 {/* Level Card */}
-                <motion.div
-                    className="rounded-3xl p-6 relative overflow-hidden"
-                    style={{
-                        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%)',
-                        border: `2px solid ${level.color}40`
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                >
-                    <div className="absolute top-0 left-0 right-0 h-1"
-                        style={{ background: `linear-gradient(90deg, transparent, ${level.color}, transparent)` }} />
+                <Card borderRadius="3xl" bg={bg} boxShadow="xl" overflow="hidden" position="relative">
+                    <Box position="absolute" top={0} left={0} right={0} h={1} bgGradient={`linear(to-r, transparent, ${level.color}, transparent)`} />
+                    <CardBody p={6}>
+                        <Flex align="center" gap={4} mb={6}>
+                            <Box position="relative">
+                                <CircularProgress
+                                    value={levelProgress}
+                                    size="80px"
+                                    thickness="8px"
+                                    color={level.color}
+                                    trackColor="gray.100"
+                                >
+                                    <CircularProgressLabel fontSize="2xl" fontWeight="black" color={level.color}>
+                                        {level.level}
+                                    </CircularProgressLabel>
+                                </CircularProgress>
+                            </Box>
+                            <Box>
+                                <Heading size="lg" mb={1}>{level.name}</Heading>
+                                <Text color="gray.500" fontWeight="medium">{xp.toLocaleString()} XP</Text>
+                            </Box>
+                        </Flex>
 
-                    <div className="flex items-center gap-4 mb-4">
-                        <motion.div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black"
-                            style={{
-                                background: `${level.color}20`,
-                                border: `2px solid ${level.color}`,
-                                color: level.color
-                            }}
-                            animate={{
-                                boxShadow: [
-                                    `0 0 20px ${level.color}20`,
-                                    `0 0 40px ${level.color}40`,
-                                    `0 0 20px ${level.color}20`
-                                ]
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                        >
-                            {level.level}
-                        </motion.div>
-                        <div>
-                            <h3 className="text-2xl font-bold text-white">{level.name}</h3>
-                            <p className="text-gray-400">{xp.toLocaleString()} XP</p>
-                        </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="relative">
-                        <div className="h-3 rounded-full bg-gray-700/50 overflow-hidden">
-                            <motion.div
-                                className="h-full rounded-full"
-                                style={{ background: `linear-gradient(90deg, ${level.color}, ${level.color}CC)` }}
-                                initial={{ width: 0 }}
-                                animate={{ width: `${levelProgress}%` }}
-                                transition={{ duration: 1, delay: 0.5 }}
-                            />
-                        </div>
-                        {nextLevel && (
-                            <p className="text-xs text-gray-500 mt-2 text-right">
-                                {xpToNext} XP to {nextLevel.name}
-                            </p>
-                        )}
-                    </div>
-                </motion.div>
+                        <Box>
+                            <Progress value={levelProgress} size="sm" colorScheme="brand" borderRadius="full" mb={2} />
+                            {nextLevel && (
+                                <Text fontSize="xs" color="gray.500" textAlign="right">
+                                    {xpToNext} XP to {nextLevel.name}
+                                </Text>
+                            )}
+                        </Box>
+                    </CardBody>
+                </Card>
 
                 {/* Streak Card */}
-                <motion.div
-                    className="rounded-3xl p-6 relative overflow-hidden"
-                    style={{
-                        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%)',
-                        border: '2px solid rgba(249, 115, 22, 0.4)'
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                >
-                    <div className="absolute top-0 left-0 right-0 h-1"
-                        style={{ background: 'linear-gradient(90deg, transparent, #F97316, transparent)' }} />
-
-                    <div className="flex items-center gap-4">
-                        <motion.div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                            style={{
-                                background: 'rgba(249, 115, 22, 0.2)',
-                                border: '2px solid #F97316'
-                            }}
-                            animate={{
-                                scale: [1, 1.1, 1],
-                                rotate: [0, 5, -5, 0]
-                            }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                            <Flame size={32} className="text-orange-500" />
-                        </motion.div>
-                        <div>
-                            <motion.h3
-                                className="text-5xl font-black text-orange-400"
-                                key={streak}
-                                initial={{ scale: 1.2 }}
-                                animate={{ scale: 1 }}
+                <Card borderRadius="3xl" bg={bg} boxShadow="xl" overflow="hidden" position="relative">
+                    <Box position="absolute" top={0} left={0} right={0} h={1} bgGradient="linear(to-r, transparent, orange.400, transparent)" />
+                    <CardBody p={6}>
+                        <Flex align="center" gap={4} mb={6}>
+                            <Box
+                                p={3}
+                                borderRadius="2xl"
+                                bg="orange.50"
+                                color="orange.500"
+                                as={motion.div}
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{ duration: 2, repeat: Infinity }}
                             >
-                                {streak}
-                            </motion.h3>
-                            <p className="text-gray-400">Day Streak</p>
-                        </div>
-                    </div>
+                                <Icon as={Flame} boxSize={8} />
+                            </Box>
+                            <Box>
+                                <Heading size="2xl" color="orange.400">{streak}</Heading>
+                                <Text color="gray.500" fontWeight="medium">Day Streak</Text>
+                            </Box>
+                        </Flex>
 
-                    <div className="flex gap-1 mt-4">
-                        {[...Array(7)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="flex-1 h-2 rounded-full"
-                                style={{
-                                    background: i < Math.min(streak, 7)
-                                        ? '#F97316'
-                                        : 'rgba(255, 255, 255, 0.1)'
-                                }}
-                            />
-                        ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">Last 7 days</p>
-                </motion.div>
+                        <HStack spacing={1} h={2}>
+                            {[...Array(7)].map((_, i) => (
+                                <Box
+                                    key={i}
+                                    flex={1}
+                                    h="full"
+                                    borderRadius="full"
+                                    bg={i < Math.min(streak, 7) ? 'orange.400' : 'gray.100'}
+                                />
+                            ))}
+                        </HStack>
+                        <Text fontSize="xs" color="gray.500" mt={2}>Last 7 days</Text>
+                    </CardBody>
+                </Card>
 
                 {/* Weekly Stats Card */}
-                <motion.div
-                    className="rounded-3xl p-6 relative overflow-hidden"
-                    style={{
-                        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%)',
-                        border: '2px solid rgba(34, 197, 94, 0.4)'
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    <div className="absolute top-0 left-0 right-0 h-1"
-                        style={{ background: 'linear-gradient(90deg, transparent, #22C55E, transparent)' }} />
+                <Card borderRadius="3xl" bg={bg} boxShadow="xl" overflow="hidden" position="relative">
+                    <Box position="absolute" top={0} left={0} right={0} h={1} bgGradient="linear(to-r, transparent, green.400, transparent)" />
+                    <CardBody p={6}>
+                        <Heading size="md" mb={6} display="flex" alignItems="center" gap={2}>
+                            <Icon as={TrendingUp} color="green.400" />
+                            Weekly Progress
+                        </Heading>
 
-                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <TrendingUp size={20} className="text-green-400" />
-                        Weekly Progress
-                    </h4>
-
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-sm">Words Learned</span>
-                            <span className="text-white font-bold">{stats.wordsLearned || 0}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-sm">Exams Taken</span>
-                            <span className="text-white font-bold">{stats.examsTaken || 0}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-sm">Voice Sessions</span>
-                            <span className="text-white font-bold">{stats.pronunciationSessions || 0}</span>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
+                        <VStack spacing={4} align="stretch">
+                            <Flex justify="space-between" align="center">
+                                <Text color="gray.500" fontSize="sm">Words Learned</Text>
+                                <Text fontWeight="bold" fontSize="lg">{stats.wordsLearned || 0}</Text>
+                            </Flex>
+                            <Flex justify="space-between" align="center">
+                                <Text color="gray.500" fontSize="sm">Exams Taken</Text>
+                                <Text fontWeight="bold" fontSize="lg">{stats.examsTaken || 0}</Text>
+                            </Flex>
+                            <Flex justify="space-between" align="center">
+                                <Text color="gray.500" fontSize="sm">Voice Sessions</Text>
+                                <Text fontWeight="bold" fontSize="lg">{stats.pronunciationSessions || 0}</Text>
+                            </Flex>
+                        </VStack>
+                    </CardBody>
+                </Card>
+            </SimpleGrid>
 
             {/* Achievements Section */}
-            <motion.div
-                className="rounded-3xl p-8"
-                style={{
-                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%)',
-                    border: '2px solid rgba(255, 215, 0, 0.2)'
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-            >
-                <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                    <Trophy size={28} className="text-yellow-400" />
+            <Box>
+                <Heading size="lg" mb={6} display="flex" alignItems="center" gap={3}>
+                    <Icon as={Trophy} color="yellow.400" boxSize={8} />
                     Achievements
-                    <span className="text-sm font-normal text-gray-400 ml-2">
+                    <Badge colorScheme="gray" borderRadius="full" px={3} py={1} fontSize="sm" fontWeight="normal">
                         {unlockedAchievements.length}/{achievements.length} unlocked
-                    </span>
-                </h3>
+                    </Badge>
+                </Heading>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={4}>
                     {achievements.map((achievement, index) => {
                         const isUnlocked = unlockedAchievements.includes(achievement.id);
 
                         return (
                             <motion.div
                                 key={achievement.id}
-                                className="relative rounded-2xl p-4 cursor-pointer transition-all"
-                                style={{
-                                    background: isUnlocked
-                                        ? 'rgba(255, 215, 0, 0.1)'
-                                        : 'rgba(255, 255, 255, 0.03)',
-                                    border: `1px solid ${isUnlocked ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
-                                    opacity: isUnlocked ? 1 : 0.6
-                                }}
                                 initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: isUnlocked ? 1 : 0.6, scale: 1 }}
+                                animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: index * 0.05 }}
-                                whileHover={{ scale: 1.05, opacity: 1 }}
-                                onClick={() => setShowAchievementDetails(achievement)}
                             >
-                                <div className="text-center">
-                                    <motion.div
-                                        className="text-4xl mb-2"
-                                        animate={isUnlocked ? {
-                                            scale: [1, 1.2, 1],
-                                            rotate: [0, 10, -10, 0]
-                                        } : {}}
-                                        transition={{ duration: 0.5 }}
-                                    >
-                                        {isUnlocked ? achievement.icon : <Lock size={32} className="mx-auto text-gray-600" />}
-                                    </motion.div>
-                                    <h4 className={`font-semibold text-sm ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>
-                                        {achievement.name}
-                                    </h4>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        +{achievement.xpReward} XP
-                                    </p>
-                                </div>
+                                <Card
+                                    borderRadius="2xl"
+                                    cursor="pointer"
+                                    bg={isUnlocked ? 'yellow.50' : bg}
+                                    variant={isUnlocked ? 'outline' : 'elevated'}
+                                    borderColor={isUnlocked ? 'yellow.400' : 'transparent'}
+                                    boxShadow={isUnlocked ? 'none' : 'sm'}
+                                    opacity={isUnlocked ? 1 : 0.6}
+                                    _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
+                                    transition="all 0.2s"
+                                    onClick={() => handleAchievementClick(achievement)}
+                                >
+                                    <CardBody textAlign="center" position="relative">
+                                        <Box fontSize="4xl" mb={3}>
+                                            {isUnlocked ? achievement.icon : <Icon as={Lock} color="gray.400" />}
+                                        </Box>
+                                        <Text fontWeight="bold" fontSize="sm" mb={1} color={isUnlocked ? 'gray.800' : 'gray.500'}>
+                                            {achievement.name}
+                                        </Text>
+                                        <Badge colorScheme="yellow" variant="subtle" borderRadius="full">
+                                            +{achievement.xpReward} XP
+                                        </Badge>
 
-                                {isUnlocked && (
-                                    <motion.div
-                                        className="absolute -top-1 -right-1"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: 'spring', delay: 0.3 }}
-                                    >
-                                        <CheckCircle size={20} className="text-green-400" fill="#22C55E" />
-                                    </motion.div>
-                                )}
+                                        {isUnlocked && (
+                                            <Icon
+                                                as={CheckCircle}
+                                                color="green.400"
+                                                position="absolute"
+                                                top={2}
+                                                right={2}
+                                                boxSize={5}
+                                            />
+                                        )}
+                                    </CardBody>
+                                </Card>
                             </motion.div>
                         );
                     })}
-                </div>
-            </motion.div>
+                </SimpleGrid>
+            </Box>
 
             {/* Achievement Details Modal */}
-            <AnimatePresence>
-                {showAchievementDetails && (
-                    <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                        style={{ background: 'rgba(0, 0, 0, 0.8)' }}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setShowAchievementDetails(null)}
-                    >
-                        <motion.div
-                            className="rounded-3xl p-8 max-w-md w-full text-center"
-                            style={{
-                                background: 'linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 1) 100%)',
-                                border: '2px solid rgba(255, 215, 0, 0.3)'
-                            }}
-                            initial={{ scale: 0.8, y: 50 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.8, y: 50 }}
-                            onClick={(e) => e.stopPropagation()}
+            <Modal isOpen={isOpen} onClose={onClose} isCentered motionPreset="slideInBottom">
+                <ModalOverlay backdropFilter="blur(5px)" bg="blackAlpha.300" />
+                <ModalContent borderRadius="3xl" textAlign="center" py={4}>
+                    <ModalCloseButton />
+                    <ModalBody py={8}>
+                        <Box fontSize="6xl" mb={4}>{selectedAchievement?.icon}</Box>
+                        <Heading size="lg" mb={2}>{selectedAchievement?.name}</Heading>
+                        <Text color="gray.500" mb={6}>{selectedAchievement?.description}</Text>
+
+                        <Badge
+                            colorScheme="yellow"
+                            fontSize="md"
+                            px={4}
+                            py={2}
+                            borderRadius="full"
+                            display="inline-flex"
+                            alignItems="center"
+                            gap={2}
                         >
-                            <div className="text-6xl mb-4">{showAchievementDetails.icon}</div>
-                            <h3 className="text-2xl font-bold text-white mb-2">
-                                {showAchievementDetails.name}
-                            </h3>
-                            <p className="text-gray-400 mb-4">
-                                {showAchievementDetails.description}
-                            </p>
-                            <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-full mx-auto w-fit"
-                                style={{ background: 'rgba(255, 215, 0, 0.2)' }}>
-                                <Zap size={16} className="text-yellow-400" />
-                                <span className="text-yellow-400 font-bold">
-                                    +{showAchievementDetails.xpReward} XP
-                                </span>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                            <Icon as={Zap} fill="currentColor" />
+                            +{selectedAchievement?.xpReward} XP
+                        </Badge>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
+        </Container>
     );
 }

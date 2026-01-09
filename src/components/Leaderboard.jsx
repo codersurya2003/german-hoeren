@@ -1,9 +1,28 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-    Trophy, Medal, TrendingUp, Crown, Flame, Sparkles, Loader2
+    Trophy, Medal, TrendingUp, Crown, Flame, Sparkles
 } from 'lucide-react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import {
+    Box,
+    Container,
+    Heading,
+    Text,
+    Button,
+    ButtonGroup,
+    Card,
+    CardBody,
+    Flex,
+    VStack,
+    HStack,
+    Avatar,
+    Badge,
+    Spinner,
+    useColorModeValue,
+    Icon,
+    Center
+} from '@chakra-ui/react';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirebaseProgress } from '../hooks/useFirebaseProgress';
@@ -16,6 +35,11 @@ export function Leaderboard() {
 
     const { currentUser } = useAuth();
     const { xp } = useFirebaseProgress();
+
+    const bg = useColorModeValue('white', 'gray.800');
+    const accentColor = useColorModeValue('brand.500', 'brand.200');
+    const cardBg = useColorModeValue('white', 'gray.700');
+    const podiumBg = useColorModeValue('gray.50', 'gray.700');
 
     // Fetch leaderboard data
     useEffect(() => {
@@ -60,206 +84,267 @@ export function Leaderboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <Loader2 size={32} className="animate-spin text-yellow-400" />
-            </div>
+            <Center py={20}>
+                <Spinner size="xl" color="brand.500" thickness="4px" />
+            </Center>
         );
     }
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <Container maxW="container.md" py={6}>
             {/* Header */}
-            <div className="text-center mb-8">
+            <VStack spacing={4} mb={8} textAlign="center">
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring' }}
                 >
-                    <Trophy size={48} className="mx-auto mb-4 text-yellow-400" />
+                    <Icon as={Trophy} boxSize={12} color="yellow.400" />
                 </motion.div>
-                <h2 className="text-3xl font-bold text-white mb-2">Leaderboard</h2>
-                <p className="text-gray-400">Compete with other German learners!</p>
-            </div>
+                <Box>
+                    <Heading size="lg" mb={2}>Leaderboard</Heading>
+                    <Text color="gray.500">Compete with other German learners!</Text>
+                </Box>
+            </VStack>
 
             {/* Timeframe Toggle */}
-            <div className="flex justify-center gap-2 mb-8">
-                {[
-                    { id: 'weekly', label: 'This Week' },
-                    { id: 'allTime', label: 'All Time' }
-                ].map((tf) => (
-                    <motion.button
-                        key={tf.id}
-                        onClick={() => setTimeframe(tf.id)}
-                        className="px-6 py-2.5 rounded-xl font-medium"
-                        style={{
-                            background: timeframe === tf.id ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                            border: `1px solid ${timeframe === tf.id ? 'rgba(255, 215, 0, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
-                            color: timeframe === tf.id ? '#FFD700' : '#94a3b8'
-                        }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        {tf.label}
-                    </motion.button>
-                ))}
-            </div>
+            <Center mb={8}>
+                <ButtonGroup isAttached variant="outline" borderRadius="xl">
+                    {[
+                        { id: 'weekly', label: 'This Week' },
+                        { id: 'allTime', label: 'All Time' }
+                    ].map((tf) => (
+                        <Button
+                            key={tf.id}
+                            onClick={() => setTimeframe(tf.id)}
+                            colorScheme={timeframe === tf.id ? 'brand' : 'gray'}
+                            variant={timeframe === tf.id ? 'solid' : 'outline'}
+                            borderRadius="xl"
+                            px={6}
+                        >
+                            {tf.label}
+                        </Button>
+                    ))}
+                </ButtonGroup>
+            </Center>
 
             {/* Your Position Card */}
-            <motion.div
-                className="rounded-2xl p-6 mb-6 relative overflow-hidden"
-                style={{
-                    background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(15, 23, 42, 1) 100%)',
-                    border: '2px solid rgba(255, 215, 0, 0.3)'
-                }}
+            <Card
+                mb={8}
+                borderRadius="2xl"
+                overflow="hidden"
+                boxShadow="lg"
+                bgGradient="linear(to-r, brand.500, brand.600)"
+                color="white"
+                as={motion.div}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                <div className="absolute top-0 left-0 right-0 h-1"
-                    style={{ background: 'linear-gradient(90deg, transparent, #FFD700, transparent)' }} />
-
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black"
-                        style={{ background: 'rgba(255, 215, 0, 0.2)', color: '#FFD700' }}>
-                        #{userPosition}
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white">Your Position</h3>
-                        <p className="text-gray-400">{xp.toLocaleString()} XP</p>
-                    </div>
-                    <Sparkles className="text-yellow-400" />
-                </div>
-            </motion.div>
+                <CardBody>
+                    <Flex align="center" gap={4}>
+                        <Flex
+                            w={14}
+                            h={14}
+                            borderRadius="2xl"
+                            bg="whiteAlpha.200"
+                            align="center"
+                            justify="center"
+                            fontSize="2xl"
+                            fontWeight="black"
+                        >
+                            #{userPosition}
+                        </Flex>
+                        <Box flex={1}>
+                            <Heading size="md" color="white">Your Position</Heading>
+                            <Text color="whiteAlpha.800">{xp.toLocaleString()} XP</Text>
+                        </Box>
+                        <Icon as={Sparkles} color="yellow.300" boxSize={6} />
+                    </Flex>
+                </CardBody>
+            </Card>
 
             {/* Top 3 Podium */}
             {sortedLeaderboard.length >= 3 && (
-                <div className="flex justify-center items-end gap-4 mb-8">
+                <Flex justify="center" align="flex-end" gap={4} mb={10} px={2}>
                     {/* 2nd Place */}
-                    <motion.div
-                        className="text-center"
+                    <VStack
+                        as={motion.div}
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
+                        spacing={3}
                     >
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-2"
-                            style={{ background: 'rgba(192, 192, 192, 0.2)', border: '2px solid #C0C0C0' }}>
-                            {sortedLeaderboard[1]?.avatar || '👤'}
-                        </div>
-                        <p className="text-white font-semibold">{sortedLeaderboard[1]?.name}</p>
-                        <p className="text-gray-400 text-sm">{sortedLeaderboard[1]?.xp?.toLocaleString()} XP</p>
-                        <div className="w-20 h-24 rounded-t-xl mt-2 flex items-center justify-center"
-                            style={{ background: 'linear-gradient(180deg, rgba(192, 192, 192, 0.3) 0%, rgba(192, 192, 192, 0.1) 100%)' }}>
-                            <Medal size={32} style={{ color: '#C0C0C0' }} />
-                        </div>
-                    </motion.div>
+                        <Avatar
+                            size="lg"
+                            name={sortedLeaderboard[1]?.name}
+                            icon={!sortedLeaderboard[1]?.name && <Text fontSize="2xl">👤</Text>}
+                            src={sortedLeaderboard[1]?.avatar}
+                            borderWidth={3}
+                            borderColor="gray.300"
+                        />
+                        <Box textAlign="center">
+                            <Text fontWeight="semibold" noOfLines={1} maxW="100px">{sortedLeaderboard[1]?.name}</Text>
+                            <Text fontSize="sm" color="gray.500">{sortedLeaderboard[1]?.xp?.toLocaleString()} XP</Text>
+                        </Box>
+                        <Flex
+                            w="80px"
+                            h="100px"
+                            bg="gray.300"
+                            borderTopRadius="xl"
+                            align="center"
+                            justify="center"
+                            bgGradient="linear(to-b, gray.300, gray.100)"
+                        >
+                            <Icon as={Medal} boxSize={8} color="white" />
+                        </Flex>
+                    </VStack>
 
                     {/* 1st Place */}
-                    <motion.div
-                        className="text-center"
+                    <VStack
+                        as={motion.div}
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
+                        spacing={3}
+                        zIndex={1}
                     >
                         <motion.div
                             animate={{ y: [0, -10, 0] }}
                             transition={{ duration: 2, repeat: Infinity }}
                         >
-                            <Crown size={32} className="mx-auto mb-2 text-yellow-400" />
+                            <Icon as={Crown} boxSize={8} color="yellow.400" />
                         </motion.div>
-                        <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-5xl mx-auto mb-2"
-                            style={{
-                                background: 'rgba(255, 215, 0, 0.2)',
-                                border: '3px solid #FFD700',
-                                boxShadow: '0 0 30px rgba(255, 215, 0, 0.3)'
-                            }}>
-                            {sortedLeaderboard[0]?.avatar || '👤'}
-                        </div>
-                        <p className="text-white font-bold text-lg">{sortedLeaderboard[0]?.name}</p>
-                        <p className="text-yellow-400 font-semibold">{sortedLeaderboard[0]?.xp?.toLocaleString()} XP</p>
-                        <div className="w-24 h-32 rounded-t-xl mt-2 flex items-center justify-center"
-                            style={{ background: 'linear-gradient(180deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 100%)' }}>
-                            <Trophy size={40} className="text-yellow-400" />
-                        </div>
-                    </motion.div>
+                        <Avatar
+                            size="xl"
+                            name={sortedLeaderboard[0]?.name}
+                            icon={!sortedLeaderboard[0]?.name && <Text fontSize="3xl">👤</Text>}
+                            src={sortedLeaderboard[0]?.avatar}
+                            borderWidth={4}
+                            borderColor="yellow.400"
+                            boxShadow="xl"
+                        />
+                        <Box textAlign="center">
+                            <Text fontWeight="bold" fontSize="lg" noOfLines={1} maxW="120px">{sortedLeaderboard[0]?.name}</Text>
+                            <Text fontSize="md" color="yellow.500" fontWeight="bold">{sortedLeaderboard[0]?.xp?.toLocaleString()} XP</Text>
+                        </Box>
+                        <Flex
+                            w="100px"
+                            h="130px"
+                            bg="yellow.400"
+                            borderTopRadius="xl"
+                            align="center"
+                            justify="center"
+                            bgGradient="linear(to-b, yellow.400, yellow.200)"
+                            boxShadow="lg"
+                        >
+                            <Icon as={Trophy} boxSize={10} color="white" />
+                        </Flex>
+                    </VStack>
 
                     {/* 3rd Place */}
-                    <motion.div
-                        className="text-center"
+                    <VStack
+                        as={motion.div}
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
+                        spacing={3}
                     >
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-2"
-                            style={{ background: 'rgba(205, 127, 50, 0.2)', border: '2px solid #CD7F32' }}>
-                            {sortedLeaderboard[2]?.avatar || '👤'}
-                        </div>
-                        <p className="text-white font-semibold">{sortedLeaderboard[2]?.name}</p>
-                        <p className="text-gray-400 text-sm">{sortedLeaderboard[2]?.xp?.toLocaleString()} XP</p>
-                        <div className="w-20 h-20 rounded-t-xl mt-2 flex items-center justify-center"
-                            style={{ background: 'linear-gradient(180deg, rgba(205, 127, 50, 0.3) 0%, rgba(205, 127, 50, 0.1) 100%)' }}>
-                            <Medal size={28} style={{ color: '#CD7F32' }} />
-                        </div>
-                    </motion.div>
-                </div>
+                        <Avatar
+                            size="lg"
+                            name={sortedLeaderboard[2]?.name}
+                            icon={!sortedLeaderboard[2]?.name && <Text fontSize="2xl">👤</Text>}
+                            src={sortedLeaderboard[2]?.avatar}
+                            borderWidth={3}
+                            borderColor="orange.300"
+                        />
+                        <Box textAlign="center">
+                            <Text fontWeight="semibold" noOfLines={1} maxW="100px">{sortedLeaderboard[2]?.name}</Text>
+                            <Text fontSize="sm" color="gray.500">{sortedLeaderboard[2]?.xp?.toLocaleString()} XP</Text>
+                        </Box>
+                        <Flex
+                            w="80px"
+                            h="80px"
+                            bg="orange.300"
+                            borderTopRadius="xl"
+                            align="center"
+                            justify="center"
+                            bgGradient="linear(to-b, orange.300, orange.100)"
+                        >
+                            <Icon as={Medal} boxSize={6} color="white" />
+                        </Flex>
+                    </VStack>
+                </Flex>
             )}
 
             {/* Rest of Leaderboard */}
-            <motion.div
-                className="rounded-2xl overflow-hidden"
-                style={{
-                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%)',
-                    border: '2px solid rgba(255, 255, 255, 0.1)'
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-            >
-                {sortedLeaderboard.slice(3).map((player, index) => {
-                    const position = index + 4;
-                    const level = getCurrentLevel(player.xp);
-                    const isCurrentUser = currentUser && player.id === currentUser.uid;
+            <Card borderRadius="2xl" overflow="hidden" boxShadow="md" bg={bg}>
+                <VStack spacing={0} divider={<Box w="full" h="1px" bg="gray.100" />}>
+                    {sortedLeaderboard.slice(3).map((player, index) => {
+                        const position = index + 4;
+                        const level = getCurrentLevel(player.xp);
+                        const isCurrentUser = currentUser && player.id === currentUser.uid;
 
-                    return (
-                        <motion.div
-                            key={player.id}
-                            className="flex items-center gap-4 p-4 border-b border-white/5 last:border-0"
-                            style={{
-                                background: isCurrentUser ? 'rgba(255, 215, 0, 0.1)' : 'transparent'
-                            }}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 * index }}
-                            whileHover={{ background: 'rgba(255, 255, 255, 0.03)' }}
-                        >
-                            <div className="w-8 text-center font-bold text-gray-500">
-                                {position}
-                            </div>
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                                style={{ background: `${level.color}20` }}>
-                                {player.avatar || '👤'}
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="font-semibold text-white">
-                                    {player.name}
-                                    {isCurrentUser && <span className="text-yellow-400 text-sm ml-2">(You)</span>}
-                                </h4>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span style={{ color: level.color }}>{level.name}</span>
-                                    {player.streak > 0 && (
-                                        <span className="flex items-center gap-1 text-orange-400">
-                                            <Flame size={12} />
-                                            {player.streak}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-white">{player.xp?.toLocaleString()}</p>
-                                <p className="text-xs text-gray-500">XP</p>
-                            </div>
-                        </motion.div>
-                    );
-                })}
-            </motion.div>
-        </div>
+                        return (
+                            <Box
+                                key={player.id}
+                                w="full"
+                                p={4}
+                                bg={isCurrentUser ? 'brand.50' : 'transparent'}
+                                _hover={{ bg: isCurrentUser ? 'brand.100' : 'gray.50' }}
+                                sx={{ transition: 'background 0.2s' }}
+                                as={motion.div}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 * index }}
+                            >
+                                <Flex align="center" gap={4}>
+                                    <Text w={8} textAlign="center" fontWeight="bold" color="gray.500">
+                                        {position}
+                                    </Text>
+
+                                    <Avatar
+                                        size="md"
+                                        name={player.name}
+                                        src={player.avatar}
+                                        bg={`${level.color}20`}
+                                        color={level.color}
+                                    >
+                                        {!player.name && !player.avatar && '👤'}
+                                    </Avatar>
+
+                                    <Box flex={1}>
+                                        <HStack>
+                                            <Text fontWeight="semibold">
+                                                {player.name}
+                                            </Text>
+                                            {isCurrentUser && (
+                                                <Badge colorScheme="brand" variant="solid" fontSize="xs" borderRadius="full">
+                                                    YOU
+                                                </Badge>
+                                            )}
+                                        </HStack>
+
+                                        <HStack fontSize="sm" spacing={3}>
+                                            <Text color={level.color} fontWeight="medium">{level.name}</Text>
+                                            {player.streak > 0 && (
+                                                <HStack spacing={1} color="orange.400">
+                                                    <Icon as={Flame} boxSize={3} />
+                                                    <Text>{player.streak}</Text>
+                                                </HStack>
+                                            )}
+                                        </HStack>
+                                    </Box>
+
+                                    <Box textAlign="right">
+                                        <Text fontWeight="bold" color="gray.700">{player.xp?.toLocaleString()}</Text>
+                                        <Text fontSize="xs" color="gray.500">XP</Text>
+                                    </Box>
+                                </Flex>
+                            </Box>
+                        );
+                    })}
+                </VStack>
+            </Card>
+        </Container>
     );
 }

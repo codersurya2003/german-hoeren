@@ -1,6 +1,19 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Volume2, Eye, EyeOff, Sparkles, BookOpen } from 'lucide-react';
+import {
+    Box,
+    Text,
+    Badge,
+    IconButton,
+    useColorModeValue,
+    Card,
+    VStack,
+    HStack,
+    Divider,
+    Icon,
+    Tooltip
+} from '@chakra-ui/react';
 import { useTTS } from '../hooks/useTTS';
 
 export function WordCard({ word }) {
@@ -20,97 +33,82 @@ export function WordCard({ word }) {
         }
     };
 
-    // Type color mapping
-    const typeColors = {
-        'Noun (m)': { accent: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)' },
-        'Noun (f)': { accent: '#EC4899', bg: 'rgba(236, 72, 153, 0.15)' },
-        'Noun (n)': { accent: '#22C55E', bg: 'rgba(34, 197, 94, 0.15)' },
-        'Verb': { accent: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' },
-        'Adjective': { accent: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' },
-        'Adverb': { accent: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)' },
-        'default': { accent: '#FFD700', bg: 'rgba(255, 215, 0, 0.15)' }
+    // Type color mapping using Chakra theme tokens
+    const typeColorScheme = {
+        'Noun (m)': 'blue',
+        'Noun (f)': 'pink',
+        'Noun (n)': 'green',
+        'Verb': 'orange',
+        'Adjective': 'purple',
+        'Adverb': 'cyan',
+        'default': 'yellow'
     };
 
-    const colors = typeColors[word.type] || typeColors['default'];
+    const colorScheme = typeColorScheme[word.type] || typeColorScheme['default'];
+    const cardBg = useColorModeValue('white', 'gray.800');
+    const borderColor = useColorModeValue(`${colorScheme}.200`, `${colorScheme}.700`);
 
     return (
         <motion.div
-            className="w-full cursor-pointer group"
-            style={{ minHeight: '280px' }}
-            onClick={handleReveal}
-            variants={{
-                hidden: { opacity: 0, y: 30, scale: 0.95 },
-                visible: { opacity: 1, y: 0, scale: 1 }
-            }}
-            whileHover={{ y: -8, scale: 1.02 }}
+            layout
+            whileHover={{ y: -5 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            style={{ height: '100%' }}
         >
-            <div
-                className="relative w-full h-full rounded-3xl overflow-hidden"
-                style={{
-                    background: `linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 1) 100%)`,
-                    border: `2px solid ${colors.accent}60`,
-                    boxShadow: `
-                        0 20px 40px -15px rgba(0, 0, 0, 0.5),
-                        0 0 60px -20px ${colors.accent}50,
-                        inset 0 1px 0 rgba(255, 255, 255, 0.15)
-                    `
-                }}
+            <Card
+                h="full"
+                cursor="pointer"
+                onClick={handleReveal}
+                bg={cardBg}
+                borderColor={borderColor}
+                borderTopWidth="4px" // Colored top border for type hint
+                borderTopColor={`${colorScheme}.400`}
+                boxShadow="md"
+                _hover={{ boxShadow: 'lg' }}
+                overflow="hidden"
+                position="relative"
             >
-                {/* Glowing top edge */}
-                <div
-                    className="absolute top-0 left-0 right-0 h-1"
-                    style={{ background: `linear-gradient(90deg, transparent, ${colors.accent}, transparent)` }}
-                />
-
-                {/* Content Container */}
-                <div className="flex flex-col h-full p-6" style={{ minHeight: '280px' }}>
-                    {/* Top Row: Type Badge & Sound Button */}
-                    <div className="flex justify-between items-start">
-                        <motion.span
-                            className="text-xs uppercase tracking-widest font-bold px-3 py-1.5 rounded-full"
-                            style={{
-                                background: colors.bg,
-                                color: colors.accent,
-                                border: `1px solid ${colors.accent}40`
-                            }}
-                            whileHover={{ scale: 1.05 }}
+                <Box p={6} h="full" display="flex" flexDirection="column">
+                    {/* Header */}
+                    <Flex justify="space-between" align="start" mb={4}>
+                        <Badge
+                            colorScheme={colorScheme}
+                            px={2}
+                            py={1}
+                            borderRadius="full"
+                            textTransform="uppercase"
+                            fontSize="xs"
+                            letterSpacing="wide"
                         >
                             {word.type}
-                        </motion.span>
+                        </Badge>
+                        <Tooltip label="Listen to pronunciation" hasArrow>
+                            <IconButton
+                                aria-label="Play pronunciation"
+                                icon={<Volume2 size={20} />}
+                                onClick={handlePlay}
+                                variant="ghost"
+                                colorScheme={colorScheme}
+                                isRound
+                                isLoading={isPlaying}
+                                size="sm"
+                                _hover={{ bg: `${colorScheme}.50` }}
+                            />
+                        </Tooltip>
+                    </Flex>
 
-                        <motion.button
-                            onClick={handlePlay}
-                            className="p-3 rounded-full transition-all duration-300"
-                            style={{
-                                background: isPlaying ? colors.accent : 'rgba(255, 255, 255, 0.1)',
-                                color: isPlaying ? '#000' : '#fff',
-                                border: `1px solid ${isPlaying ? colors.accent : 'rgba(255, 255, 255, 0.2)'}`,
-                                boxShadow: isPlaying ? `0 0 20px ${colors.accent}60` : 'none'
-                            }}
-                            whileHover={{
-                                scale: 1.1,
-                                background: colors.accent,
-                                color: '#000'
-                            }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <Volume2 size={20} />
-                        </motion.button>
-                    </div>
-
-                    {/* Center: German Word */}
-                    <div className="flex-1 flex items-center justify-center py-6">
-                        <motion.h3
-                            className="text-4xl md:text-5xl font-bold text-center leading-tight"
-                            style={{
-                                color: '#ffffff',
-                                textShadow: `0 0 40px ${colors.accent}40, 0 2px 4px rgba(0,0,0,0.3)`
-                            }}
+                    {/* German Word */}
+                    <Box flex="1" display="flex" alignItems="center" justify="center" py={4}>
+                        <Text
+                            fontSize="4xl"
+                            fontWeight="800"
+                            textAlign="center"
+                            color="gray.700"
+                            lineHeight="shorter"
                         >
                             {word.german}
-                        </motion.h3>
-                    </div>
+                        </Text>
+                    </Box>
 
                     {/* Translation Section */}
                     <AnimatePresence mode="wait">
@@ -120,36 +118,36 @@ export function WordCard({ word }) {
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="text-center"
+                                transition={{ duration: 0.2 }}
                             >
-                                {/* Divider */}
-                                <div
-                                    className="w-16 h-0.5 rounded-full mx-auto mb-4"
-                                    style={{ background: `linear-gradient(90deg, transparent, ${colors.accent}, transparent)` }}
-                                />
+                                <Divider my={3} borderColor="gray.100" />
 
-                                {/* English Translation */}
-                                <div className="flex items-center justify-center gap-2 mb-3">
-                                    <Sparkles size={16} style={{ color: colors.accent }} />
-                                    <h4 className="text-2xl font-semibold" style={{ color: colors.accent }}>
-                                        {word.english}
-                                    </h4>
-                                </div>
+                                <VStack spacing={2} align="center">
+                                    <HStack spacing={2} color={`${colorScheme}.600`}>
+                                        <Icon as={Sparkles} size={14} />
+                                        <Text fontSize="xl" fontWeight="bold">
+                                            {word.english}
+                                        </Text>
+                                    </HStack>
 
-                                {/* Example Sentence */}
-                                <p className="italic text-sm px-4" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                                    "{word.example}"
-                                </p>
+                                    <Text
+                                        fontSize="sm"
+                                        color="gray.500"
+                                        fontStyle="italic"
+                                        textAlign="center"
+                                        bg="gray.50"
+                                        p={2}
+                                        borderRadius="md"
+                                        w="full"
+                                    >
+                                        "{word.example}"
+                                    </Text>
 
-                                {/* Hide hint */}
-                                <motion.div
-                                    className="flex items-center justify-center gap-2 mt-4 opacity-60"
-                                    style={{ color: colors.accent }}
-                                >
-                                    <EyeOff size={12} />
-                                    <span className="text-xs uppercase tracking-wider">Tap to hide</span>
-                                </motion.div>
+                                    <HStack spacing={1} color="gray.400" pt={2}>
+                                        <Icon as={EyeOff} size={12} />
+                                        <Text fontSize="xs" fontWeight="medium" textTransform="uppercase">Tap to hide</Text>
+                                    </HStack>
+                                </VStack>
                             </motion.div>
                         ) : (
                             <motion.div
@@ -157,18 +155,29 @@ export function WordCard({ word }) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="flex items-center justify-center gap-2 text-sm opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-                                style={{ color: colors.accent }}
                             >
-                                <Eye size={14} className="animate-pulse" />
-                                <span className="uppercase tracking-widest text-xs font-medium">
-                                    Tap to reveal
-                                </span>
+                                <Box
+                                    py={8}
+                                    display="flex"
+                                    justifyContent="center"
+                                    alignItems="center"
+                                    color="gray.400"
+                                >
+                                    <HStack spacing={2} _groupHover={{ color: 'brand.500' }} transition="color 0.2s">
+                                        <Icon as={Eye} size={16} />
+                                        <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="widest">
+                                            Tap to reveal
+                                        </Text>
+                                    </HStack>
+                                </Box>
                             </motion.div>
                         )}
                     </AnimatePresence>
-                </div>
-            </div>
+                </Box>
+            </Card>
         </motion.div>
     );
 }
+
+// Helper component import
+import { Flex } from '@chakra-ui/react';
