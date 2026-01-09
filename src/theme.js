@@ -36,12 +36,12 @@ const theme = extendTheme({
         body: `'Inter', sans-serif`,
     },
     styles: {
-        global: {
+        global: (props) => ({
             body: {
-                bg: 'gray.50',
-                color: 'gray.800',
+                bg: props.colorMode === 'dark' ? 'gray.900' : 'gray.50',
+                color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
             },
-        },
+        }),
     },
     components: {
         Button: {
@@ -56,16 +56,16 @@ const theme = extendTheme({
             },
         },
         Card: {
-            baseStyle: {
+            baseStyle: (props) => ({
                 container: {
                     borderRadius: 'xl',
                     boxShadow: 'sm',
                     overflow: 'hidden',
-                    bg: 'white',
+                    bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
                     border: '1px solid',
-                    borderColor: 'gray.100',
+                    borderColor: props.colorMode === 'dark' ? 'gray.700' : 'gray.100',
                 },
-            },
+            }),
         },
     },
 });

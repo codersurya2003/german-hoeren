@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MessageCircle, Send, Sparkles, Volume2, Lightbulb,
-    BookOpen, HelpCircle, RefreshCw
+    BookOpen, HelpCircle, RefreshCw, AlertCircle
 } from 'lucide-react';
 import {
     Box,
@@ -23,54 +23,19 @@ import {
     Badge,
     useColorModeValue,
     Avatar,
-    Divider
+    Divider,
+    Alert,
+    AlertIcon,
+    AlertDescription
 } from '@chakra-ui/react';
 import { useTTS } from '../hooks/useTTS';
-
-// Simple German learning Q&A responses
-const FAQ_RESPONSES = {
-    // Grammar questions
-    'der die das': {
-        answer: 'In German, nouns have three genders:\n\n• **der** (masculine) - der Mann, der Tisch\n• **die** (feminine) - die Frau, die Lampe\n• **das** (neuter) - das Kind, das Buch\n\nTip: Learn each noun with its article!',
-        german: 'Der Artikel ist sehr wichtig!'
-    },
-    'akkusativ': {
-        answer: 'The **Akkusativ** (accusative) case is used for direct objects:\n\n• der → den (only masculine changes)\n• die → die\n• das → das\n\nExample: Ich sehe **den** Mann.',
-        german: 'Ich sehe den Mann.'
-    },
-    'dativ': {
-        answer: 'The **Dativ** (dative) case is used for indirect objects:\n\n• der → dem\n• die → der\n• das → dem\n\nExample: Ich gebe **dem** Mann das Buch.',
-        german: 'Ich gebe dem Mann das Buch.'
-    },
-    'verb conjugation': {
-        answer: 'Regular German verbs follow this pattern:\n\n• ich -e (ich spiele)\n• du -st (du spielst)\n• er/sie/es -t (er spielt)\n• wir -en (wir spielen)\n• ihr -t (ihr spielt)\n• sie/Sie -en (sie spielen)',
-        german: 'Ich lerne, du lernst, er lernt!'
-    },
-    'past tense': {
-        answer: 'German has two main past tenses:\n\n**Perfekt** (spoken): Ich **habe** gespielt\n**Präteritum** (written): Ich spielte\n\nMost Germans use Perfekt in everyday speech!',
-        german: 'Ich habe Deutsch gelernt.'
-    },
-    // Common phrases
-    'hello': {
-        answer: 'Common German greetings:\n\n• **Hallo** - Hello (informal)\n• **Guten Morgen** - Good morning\n• **Guten Tag** - Good day\n• **Guten Abend** - Good evening\n• **Tschüss** - Bye',
-        german: 'Hallo! Wie geht es dir?'
-    },
-    'thank you': {
-        answer: 'Ways to say thank you:\n\n• **Danke** - Thanks\n• **Danke schön** - Thank you\n• **Vielen Dank** - Many thanks\n• **Danke sehr** - Thank you very much',
-        german: 'Vielen Dank für Ihre Hilfe!'
-    },
-    // Default fallback
-    'default': {
-        answer: "I'm your German learning assistant! Try asking about:\n\n• Grammar (der/die/das, cases, verbs)\n• Common phrases (hello, thank you)\n• Pronunciation tips\n• Word meanings\n\nType your question and I'll help!",
-        german: 'Wie kann ich dir helfen?'
-    }
-};
+import { askGemini, isGeminiConfigured } from '../services/gemini';
 
 // Quick question suggestions
 const QUICK_QUESTIONS = [
     { text: "How do I use der, die, das?", icon: HelpCircle },
     { text: "Explain Akkusativ case", icon: BookOpen },
-    { text: "How to say hello?", icon: MessageCircle },
+    { text: "How to say hello in German?", icon: MessageCircle },
     { text: "Verb conjugation rules", icon: Lightbulb }
 ];
 
@@ -78,6 +43,7 @@ export function AIDoubtAssistant() {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [error, setError] = useState(null);
     const messagesEndRef = useRef(null);
     const { speak } = useTTS();
 
@@ -87,49 +53,18 @@ export function AIDoubtAssistant() {
     const aiBubbleBg = useColorModeValue('gray.100', 'gray.700');
     const germanPhraseBg = useColorModeValue('purple.50', 'purple.900');
 
+    // Check if Gemini is configured
+    const geminiConfigured = isGeminiConfigured();
+
     // Scroll to bottom when new messages arrive
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Find best matching response
-    const findResponse = (query) => {
-        const lowerQuery = query.toLowerCase();
-
-        for (const [key, value] of Object.entries(FAQ_RESPONSES)) {
-            if (key !== 'default' && lowerQuery.includes(key)) {
-                return value;
-            }
-        }
-
-        // Check for partial matches
-        if (lowerQuery.includes('article') || lowerQuery.includes('gender')) {
-            return FAQ_RESPONSES['der die das'];
-        }
-        if (lowerQuery.includes('accusative') || lowerQuery.includes('direct object')) {
-            return FAQ_RESPONSES['akkusativ'];
-        }
-        if (lowerQuery.includes('dative') || lowerQuery.includes('indirect')) {
-            return FAQ_RESPONSES['dativ'];
-        }
-        if (lowerQuery.includes('conjugat') || lowerQuery.includes('verb')) {
-            return FAQ_RESPONSES['verb conjugation'];
-        }
-        if (lowerQuery.includes('past') || lowerQuery.includes('perfekt')) {
-            return FAQ_RESPONSES['past tense'];
-        }
-        if (lowerQuery.includes('hi') || lowerQuery.includes('greet')) {
-            return FAQ_RESPONSES['hello'];
-        }
-        if (lowerQuery.includes('thank') || lowerQuery.includes('danke')) {
-            return FAQ_RESPONSES['thank you'];
-        }
-
-        return FAQ_RESPONSES['default'];
-    };
-
     const handleSend = async () => {
         if (!inputValue.trim()) return;
+
+        setError(null);
 
         const userMessage = {
             id: Date.now(),
@@ -141,19 +76,28 @@ export function AIDoubtAssistant() {
         setInputValue('');
         setIsTyping(true);
 
-        // Simulate AI thinking delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+            // Get AI response from Gemini
+            const response = await askGemini(inputValue, messages);
 
-        const response = findResponse(inputValue);
-        const aiMessage = {
-            id: Date.now() + 1,
-            type: 'ai',
-            text: response.answer,
-            german: response.german
-        };
+            const aiMessage = {
+                id: Date.now() + 1,
+                type: 'ai',
+                text: response.text,
+                german: response.germanExample
+            };
 
-        setIsTyping(false);
-        setMessages(prev => [...prev, aiMessage]);
+            setMessages(prev => [...prev, aiMessage]);
+        } catch (err) {
+            console.error('AI Error:', err);
+            setError(err.message || 'Failed to get AI response. Please try again.');
+
+            // Remove user message if AI failed
+            setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+            setInputValue(userMessage.text); // Restore input
+        } finally {
+            setIsTyping(false);
+        }
     };
 
     const handleQuickQuestion = (question) => {
@@ -169,6 +113,7 @@ export function AIDoubtAssistant() {
 
     const clearChat = () => {
         setMessages([]);
+        setError(null);
     };
 
     return (
@@ -181,6 +126,24 @@ export function AIDoubtAssistant() {
                 </HStack>
                 <Text color="gray.500">Ask any question about German grammar, phrases, or pronunciation</Text>
             </VStack>
+
+            {/* Configuration Warning */}
+            {!geminiConfigured && (
+                <Alert status="warning" borderRadius="xl" mb={4}>
+                    <AlertIcon />
+                    <AlertDescription fontSize="sm">
+                        AI is not configured. Add VITE_GEMINI_API_KEY to your .env file to enable AI features.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {/* Error Alert */}
+            {error && (
+                <Alert status="error" borderRadius="xl" mb={4}>
+                    <AlertIcon />
+                    <AlertDescription fontSize="sm">{error}</AlertDescription>
+                </Alert>
+            )}
 
             {/* Chat Area */}
             <Card borderRadius="2xl" boxShadow="xl" bg={bg} overflow="hidden">

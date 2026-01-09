@@ -17,7 +17,9 @@ import {
   SimpleGrid,
   useToast,
   Icon,
+  IconButton,
   useColorModeValue,
+  useColorMode,
 } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -34,6 +36,8 @@ import {
   Sparkles,
   Flame,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 import { useAuth } from "./contexts/AuthContext";
@@ -57,6 +61,7 @@ const App = () => {
   const { currentUser, logout } = useAuth();
   const { userData } = useFirebaseProgress();
   const toast = useToast();
+  const { colorMode, toggleColorMode } = useColorMode();
 
   // Load words only once on mount
   // useEffect(() => {
@@ -82,6 +87,7 @@ const App = () => {
 
   const bg = useColorModeValue("gray.50", "gray.900");
   const headerBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   const mainNavItems = [
     { id: "daily5", label: "Daily 5", icon: Calendar, color: "blue" },
@@ -102,7 +108,7 @@ const App = () => {
         bg={headerBg}
         boxShadow="sm"
         borderBottomWidth="1px"
-        borderColor="gray.200"
+        borderColor={borderColor}
         py={4}
       >
         <Container maxW="container.xl">
@@ -163,6 +169,16 @@ const App = () => {
                   <Text fontWeight="bold">{displayStreak} Day Streak</Text>
                 </Badge>
               )}
+
+              {/* Theme Toggle */}
+              <IconButton
+                icon={<Icon as={colorMode === "light" ? Moon : Sun} />}
+                onClick={toggleColorMode}
+                variant="ghost"
+                aria-label="Toggle theme"
+                size="sm"
+                borderRadius="full"
+              />
 
               {/* User Menu */}
               {currentUser ? (
