@@ -3,21 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Mic, MicOff, Play, Pause, RotateCcw, Volume2,
     CheckCircle, XCircle, Sparkles, Target, TrendingUp,
-    ChevronRight, ChevronLeft
+    ChevronRight, ChevronLeft, Shuffle
 } from 'lucide-react';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useTTS } from '../hooks/useTTS';
-import { getDailyWords } from '../data/words';
+import { WORDS } from '../data/words';
 
 export function VoiceStudio() {
-    // Use useState with lazy initialization to keep words stable across re-renders
-    const [words] = useState(() => getDailyWords());
-    const [currentWordIndex, setCurrentWordIndex] = useState(0);
+    // Use full word list for random practice
+    const [currentWordIndex, setCurrentWordIndex] = useState(() =>
+        Math.floor(Math.random() * WORDS.length)
+    );
     const [difficulty, setDifficulty] = useState(1); // 1-5 difficulty levels
     const [showResult, setShowResult] = useState(false);
     const [isPlayingNative, setIsPlayingNative] = useState(false);
     const [pronunciationResult, setPronunciationResult] = useState(null);
+
+    // Ref to track the latest transcript value (avoids stale closure issues)
+    const transcriptRef = useRef('');
 
     // Difficulty levels configuration
     const difficultyLevels = [
@@ -29,7 +33,7 @@ export function VoiceStudio() {
     ];
 
     const currentDifficulty = difficultyLevels.find(d => d.level === difficulty);
-    const currentWord = words[currentWordIndex];
+    const currentWord = WORDS[currentWordIndex];
 
     // Get practice text based on difficulty
     const getPracticeText = () => {
@@ -58,12 +62,18 @@ export function VoiceStudio() {
     const { speak } = useTTS();
     const audioRef = useRef(null);
 
+    // Keep transcriptRef synced with latest transcript value
+    useEffect(() => {
+        transcriptRef.current = transcript;
+    }, [transcript]);
+
     // Handle recording with speech recognition
     const handleStartRecording = () => {
         clearRecording();
         resetTranscript();
         setShowResult(false);
         setPronunciationResult(null);
+        transcriptRef.current = ''; // Reset ref as well
         startRecording();
         if (speechSupported) {
             startListening();
@@ -74,12 +84,14 @@ export function VoiceStudio() {
         stopRecording();
         stopListening();
 
-        // Analyze pronunciation after a short delay
+        // Analyze pronunciation after a delay to allow final transcript to settle
         setTimeout(() => {
-            const result = analyzePronunciation(practiceText, transcript);
+            // Use ref to get the latest transcript value (avoids stale closure)
+            const currentTranscript = transcriptRef.current;
+            const result = analyzePronunciation(practiceText, currentTranscript);
             setPronunciationResult(result);
             setShowResult(true);
-        }, 500);
+        }, 800); // Increased delay to allow speech recognition to finalize
     };
 
     // Play native pronunciation
@@ -91,7 +103,7 @@ export function VoiceStudio() {
 
     // Navigate words
     const nextWord = () => {
-        setCurrentWordIndex((prev) => (prev + 1) % words.length);
+        setCurrentWordIndex((prev) => (prev + 1) % WORDS.length);
         clearRecording();
         resetTranscript();
         setShowResult(false);
@@ -99,7 +111,20 @@ export function VoiceStudio() {
     };
 
     const prevWord = () => {
-        setCurrentWordIndex((prev) => (prev - 1 + words.length) % words.length);
+        setCurrentWordIndex((prev) => (prev - 1 + WORDS.length) % WORDS.length);
+        clearRecording();
+        resetTranscript();
+        setShowResult(false);
+        setPronunciationResult(null);
+    };
+
+    // Shuffle to a random word
+    const shuffleWord = () => {
+        let newIndex;
+        do {
+            newIndex = Math.floor(Math.random() * WORDS.length);
+        } while (newIndex === currentWordIndex && WORDS.length > 1);
+        setCurrentWordIndex(newIndex);
         clearRecording();
         resetTranscript();
         setShowResult(false);
@@ -202,13 +227,23 @@ export function VoiceStudio() {
                         <ChevronLeft size={24} />
                     </motion.button>
 
-                    <div className="text-center">
+                    <div className="flex items-center gap-3">
                         <span
                             className="text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full"
                             style={{ background: `${accentColor}20`, color: accentColor }}
                         >
                             {currentWord?.type}
                         </span>
+                        <motion.button
+                            onClick={shuffleWord}
+                            className="p-2 rounded-full"
+                            style={{ background: `${accentColor}30`, color: accentColor }}
+                            whileHover={{ scale: 1.1, rotate: 180 }}
+                            whileTap={{ scale: 0.9 }}
+                            title="Random word"
+                        >
+                            <Shuffle size={18} />
+                        </motion.button>
                     </div>
 
                     <motion.button

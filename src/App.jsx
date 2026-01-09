@@ -135,7 +135,15 @@ function AppContent() {
       </div>
 
       {/* Header */}
-      <header className="flex justify-between items-center py-6 mb-8 relative z-10">
+      <header
+        className="sticky top-0 flex justify-between items-center py-6 px-4 mb-8 relative z-50 rounded-2xl"
+        style={{
+          backdropFilter: 'blur(20px)',
+          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+        }}
+      >
         <motion.div
           className="flex items-center gap-4"
           initial={{ opacity: 0, x: -20 }}
@@ -191,43 +199,51 @@ function AppContent() {
 
         {/* Stats & User Menu */}
         <motion.div
-          className="flex items-center gap-3"
+          className="flex items-center gap-4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
         >
           {/* XP Badge */}
           <motion.div
-            className="flex items-center gap-2 px-4 py-2 rounded-xl"
+            className="flex items-center gap-2.5 px-5 py-2.5 rounded-2xl"
             style={{
-              background: 'rgba(139, 92, 246, 0.15)',
-              border: '1px solid rgba(139, 92, 246, 0.3)'
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)',
+              backdropFilter: 'blur(10px)',
+              border: '2px solid rgba(139, 92, 246, 0.4)',
+              boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, boxShadow: '0 6px 25px rgba(139, 92, 246, 0.4)' }}
+            whileTap={{ scale: 0.98 }}
           >
-            <Sparkles size={16} className="text-purple-400" />
-            <span className="text-purple-400 font-bold">{displayXp.toLocaleString()} XP</span>
+            <Sparkles size={18} className="text-purple-400" />
+            <span className="text-purple-300 font-bold text-lg">{displayXp.toLocaleString()}</span>
+            <span className="text-purple-400/70 text-sm font-medium">XP</span>
           </motion.div>
 
           {/* Streak Badge */}
           {displayStreak > 0 && (
             <motion.div
-              className="flex items-center gap-2 px-4 py-2 rounded-xl"
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-2xl"
               style={{
-                background: 'rgba(249, 115, 22, 0.15)',
-                border: '1px solid rgba(249, 115, 22, 0.3)'
+                background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%)',
+                backdropFilter: 'blur(10px)',
+                border: '2px solid rgba(249, 115, 22, 0.4)',
+                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
               }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, boxShadow: '0 6px 25px rgba(249, 115, 22, 0.4)' }}
+              whileTap={{ scale: 0.98 }}
               animate={{
                 boxShadow: [
-                  '0 0 10px rgba(249, 115, 22, 0.2)',
-                  '0 0 20px rgba(249, 115, 22, 0.4)',
-                  '0 0 10px rgba(249, 115, 22, 0.2)'
+                  '0 4px 20px rgba(249, 115, 22, 0.3)',
+                  '0 6px 30px rgba(249, 115, 22, 0.5)',
+                  '0 4px 20px rgba(249, 115, 22, 0.3)'
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Flame size={16} className="text-orange-400" />
-              <span className="text-orange-400 font-bold">{displayStreak}</span>
+              <Flame size={18} className="text-orange-400" />
+              <span className="text-orange-300 font-bold text-lg">{displayStreak}</span>
+              <span className="text-orange-400/70 text-sm font-medium">Day{displayStreak !== 1 ? 's' : ''}</span>
             </motion.div>
           )}
 
@@ -236,58 +252,87 @@ function AppContent() {
             <div className="relative">
               <motion.button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                className="flex items-center gap-2 px-3 py-2 rounded-2xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                  backdropFilter: 'blur(10px)',
+                  border: '2px solid rgba(255, 215, 0, 0.3)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
                 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: '0 6px 25px rgba(255, 215, 0, 0.3)',
+                  borderColor: 'rgba(255, 215, 0, 0.5)'
+                }}
+                whileTap={{ scale: 0.98 }}
               >
                 {currentUser.photoURL ? (
-                  <img
-                    src={currentUser.photoURL}
-                    alt={currentUser.displayName}
-                    className="w-8 h-8 rounded-full"
-                  />
+                  <div
+                    className="w-10 h-10 rounded-full p-0.5"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                    }}
+                  >
+                    <img
+                      src={currentUser.photoURL}
+                      alt={currentUser.displayName}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                    <User size={16} className="text-yellow-400" />
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.1) 100%)',
+                      border: '2px solid rgba(255, 215, 0, 0.5)'
+                    }}
+                  >
+                    <User size={20} className="text-yellow-400" />
                   </div>
                 )}
                 <ChevronDown
-                  size={16}
-                  className={`text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                  size={18}
+                  className="text-gray-300 transition-transform"
+                  style={{
+                    transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}
                 />
               </motion.button>
 
               <AnimatePresence>
                 {showUserMenu && (
                   <motion.div
-                    className="absolute top-full mt-2 right-0 w-48 rounded-xl overflow-hidden z-50"
+                    className="absolute top-full mt-3 right-0 w-56 rounded-2xl overflow-hidden z-50"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.4)'
+                      background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+                      backdropFilter: 'blur(20px)',
+                      border: '2px solid rgba(255, 215, 0, 0.2)',
+                      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.1)'
                     }}
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                   >
-                    <div className="p-4 border-b border-white/10">
-                      <p className="font-semibold text-white truncate">
+                    <div className="p-5 border-b border-white/10">
+                      <p className="font-bold text-white truncate text-base mb-1">
                         {currentUser.displayName || 'German Learner'}
                       </p>
                       <p className="text-xs text-gray-400 truncate">
                         {currentUser.email}
                       </p>
                     </div>
-                    <button
+                    <motion.button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-400 hover:bg-white/5 hover:text-red-400 transition-colors"
+                      className="w-full flex items-center gap-3 px-5 py-3.5 text-left text-gray-400 transition-colors"
+                      whileHover={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#EF4444'
+                      }}
                     >
-                      <LogOut size={16} />
-                      Sign Out
-                    </button>
+                      <LogOut size={18} />
+                      <span className="font-medium">Sign Out</span>
+                    </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -295,11 +340,15 @@ function AppContent() {
           ) : (
             <motion.button
               onClick={() => setShowAuthModal(true)}
-              className="px-4 py-2 rounded-xl font-semibold text-black"
+              className="px-6 py-2.5 rounded-2xl font-bold text-black"
               style={{
-                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                boxShadow: '0 4px 20px rgba(255, 215, 0, 0.4)'
               }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: '0 6px 30px rgba(255, 215, 0, 0.5)'
+              }}
               whileTap={{ scale: 0.95 }}
             >
               Sign In
@@ -310,7 +359,7 @@ function AppContent() {
 
       {/* Navigation */}
       <motion.nav
-        className="flex flex-wrap justify-center gap-2 mb-10 relative z-10"
+        className="flex flex-wrap justify-center gap-3 mb-10 relative z-10"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -319,19 +368,30 @@ function AppContent() {
           <motion.button
             key={item.id}
             onClick={() => setView(item.id)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all relative overflow-hidden"
+            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl transition-all relative overflow-hidden font-semibold"
             style={{
-              background: view === item.id ? `${viewInfo[item.id].color}15` : 'rgba(255, 255, 255, 0.05)',
+              background: view === item.id
+                ? `linear-gradient(135deg, ${viewInfo[item.id].color}20 0%, ${viewInfo[item.id].color}10 100%)`
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%)',
+              backdropFilter: 'blur(10px)',
               color: view === item.id ? viewInfo[item.id].color : '#94a3b8',
               border: view === item.id
-                ? `1px solid ${viewInfo[item.id].color}40`
-                : '1px solid rgba(255, 255, 255, 0.1)'
+                ? `2px solid ${viewInfo[item.id].color}60`
+                : '2px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: view === item.id
+                ? `0 4px 20px ${viewInfo[item.id].color}30`
+                : '0 2px 10px rgba(0, 0, 0, 0.1)'
             }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{
+              scale: 1.03,
+              boxShadow: view === item.id
+                ? `0 6px 25px ${viewInfo[item.id].color}40`
+                : '0 4px 15px rgba(255, 255, 255, 0.1)'
+            }}
+            whileTap={{ scale: 0.97 }}
           >
-            <item.icon size={18} />
-            <span className="font-semibold">{item.label}</span>
+            <item.icon size={20} />
+            <span>{item.label}</span>
           </motion.button>
         ))}
 
@@ -339,57 +399,79 @@ function AppContent() {
         <div className="relative">
           <motion.button
             onClick={() => setShowMoreNav(!showMoreNav)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all"
+            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl transition-all font-semibold"
             style={{
               background: moreNavItems.some(i => i.id === view)
-                ? `${viewInfo[view]?.color || '#FFD700'}15`
-                : 'rgba(255, 255, 255, 0.05)',
+                ? `linear-gradient(135deg, ${viewInfo[view]?.color || '#FFD700'}20 0%, ${viewInfo[view]?.color || '#FFD700'}10 100%)`
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%)',
+              backdropFilter: 'blur(10px)',
               color: moreNavItems.some(i => i.id === view)
                 ? viewInfo[view]?.color || '#FFD700'
                 : '#94a3b8',
               border: moreNavItems.some(i => i.id === view)
-                ? `1px solid ${viewInfo[view]?.color || '#FFD700'}40`
-                : '1px solid rgba(255, 255, 255, 0.1)'
+                ? `2px solid ${viewInfo[view]?.color || '#FFD700'}60`
+                : '2px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: moreNavItems.some(i => i.id === view)
+                ? `0 4px 20px ${viewInfo[view]?.color || '#FFD700'}30`
+                : '0 2px 10px rgba(0, 0, 0, 0.1)'
             }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{
+              scale: 1.03,
+              boxShadow: moreNavItems.some(i => i.id === view)
+                ? `0 6px 25px ${viewInfo[view]?.color || '#FFD700'}40`
+                : '0 4px 15px rgba(255, 255, 255, 0.1)'
+            }}
+            whileTap={{ scale: 0.97 }}
           >
-            <span className="font-semibold">More</span>
+            <span>More</span>
             <ChevronDown
-              size={16}
-              className={`transition-transform ${showMoreNav ? 'rotate-180' : ''}`}
+              size={18}
+              className="transition-transform"
+              style={{
+                transform: showMoreNav ? 'rotate(180deg)' : 'rotate(0deg)'
+              }}
             />
           </motion.button>
 
           <AnimatePresence>
             {showMoreNav && (
               <motion.div
-                className="absolute top-full mt-2 right-0 rounded-xl overflow-hidden z-50"
+                className="absolute top-full mt-3 right-0 w-64 rounded-2xl overflow-hidden z-50"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.4)'
+                  background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '2px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
                 }}
                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               >
-                {moreNavItems.map((item) => (
+                {moreNavItems.map((item, index) => (
                   <motion.button
                     key={item.id}
                     onClick={() => {
                       setView(item.id);
                       setShowMoreNav(false);
                     }}
-                    className="flex items-center gap-3 px-5 py-3 w-full text-left transition-all"
+                    className="flex items-center gap-3.5 px-5 py-4 w-full text-left transition-all font-medium"
                     style={{
-                      background: view === item.id ? `${viewInfo[item.id].color}15` : 'transparent',
-                      color: view === item.id ? viewInfo[item.id].color : '#94a3b8'
+                      background: view === item.id
+                        ? `linear-gradient(135deg, ${viewInfo[item.id].color}20 0%, ${viewInfo[item.id].color}10 100%)`
+                        : 'transparent',
+                      color: view === item.id ? viewInfo[item.id].color : '#94a3b8',
+                      borderBottom: index < moreNavItems.length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none'
                     }}
-                    whileHover={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                    whileHover={{
+                      background: view === item.id
+                        ? `linear-gradient(135deg, ${viewInfo[item.id].color}25 0%, ${viewInfo[item.id].color}15 100%)`
+                        : 'rgba(255, 255, 255, 0.08)',
+                      paddingLeft: '24px'
+                    }}
                   >
-                    <item.icon size={18} />
-                    <span className="font-medium whitespace-nowrap">{item.label}</span>
+                    <item.icon size={20} />
+                    <span className="whitespace-nowrap">{item.label}</span>
                   </motion.button>
                 ))}
               </motion.div>
